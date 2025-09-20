@@ -1,6 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
-import os
+
+from flask import Flask, flash, redirect, render_template, request, url_for
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Change this in production
