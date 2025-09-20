@@ -1,6 +1,6 @@
 run =  ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
 entrypoint = "main.py"
-modules = ["python-3.10:v18-20230807-322e88b"]
+modules = ["python-3.10:v18-20230807-322e88b", "postgresql-16"]
 
 hidden = [".pythonlibs"]
 
@@ -14,6 +14,10 @@ deploymentTarget = "cloudrun"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 40361
+externalPort = 3000
 
 [agent]
 expertMode = true
