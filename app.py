@@ -1,7 +1,8 @@
 import sqlite3
 
 from flask import Flask, flash, redirect, render_template, request, url_for
-
+from functools import wraps
+from flask import session
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Change this in production
 
@@ -17,6 +18,7 @@ def init_db():
                 username TEXT UNIQUE NOT NULL,
                 email TEXT NOT NULL,
                 password TEXT NOT NULL
+                role TEXT NOT NULL DEFAULT 'user'
             )
         ''')
         conn.commit()
@@ -30,9 +32,7 @@ def get_db_connection():
 def user_exists(username):
     """Check if username already exists"""
     conn = get_db_connection()
-    user = conn.execute(
-        'SELECT username FROM users WHERE username = ?', (username,)
-    ).fetchone()
+    user = conn.execute('SELECT username FROM users WHERE username = ?', (username,)).fetchone()
     conn.close()
     return user is not None
 
@@ -52,10 +52,8 @@ def create_user(username, email, password):
 def validate_user(username, password):
     """Validate user credentials"""
     conn = get_db_connection()
-    user = conn.execute(
-        'SELECT username, password FROM users WHERE username = ? AND password = ?',
-        (username, password)
-    ).fetchone()
+    user = conn.execute('SELECT username, password FROM users WHERE username = ? AND password = ?',
+                       (username, password)).fetchone()
     conn.close()
     return user is not None
 
@@ -106,6 +104,34 @@ def signup():
                 flash('Error creating user. Please try again.', 'error')
     
     return render_template('signup.html')
+
+
+
+
+def admin_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if session.get('role') != 'admin':
+            flash('Admin access required.', 'error')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return wrapper
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    db = get_db()
+    users = db.execute("SELECT id, username, email, role FROM users").fetchall()
+    db.close()
+    return render_template('admin/dashboard.html', users=users)
+@app.route('/admin/users/promote/<int:user_id>')
+@admin_required
+def promote_user(user_id):
+    db = get_db()
+    db.execute("UPDATE users SET role = 'admin' WHERE id = ?", (user_id,))
+    db.commit()
+    db.close()
+    flash('User promoted to admin.')
+    return redirect(url_for('admin_dashboard'))
 
 if __name__ == '__main__':
     # Initialize database
