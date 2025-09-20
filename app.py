@@ -30,7 +30,9 @@ def get_db_connection():
 def user_exists(username):
     """Check if username already exists"""
     conn = get_db_connection()
-    user = conn.execute('SELECT username FROM users WHERE username = ?', (username,)).fetchone()
+    user = conn.execute(
+        'SELECT username FROM users WHERE username = ?', (username,)
+    ).fetchone()
     conn.close()
     return user is not None
 
@@ -50,8 +52,10 @@ def create_user(username, email, password):
 def validate_user(username, password):
     """Validate user credentials"""
     conn = get_db_connection()
-    user = conn.execute('SELECT username, password FROM users WHERE username = ? AND password = ?',
-                       (username, password)).fetchone()
+    user = conn.execute(
+        'SELECT username, password FROM users WHERE username = ? AND password = ?',
+        (username, password)
+    ).fetchone()
     conn.close()
     return user is not None
 
