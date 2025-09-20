@@ -17,7 +17,7 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
                 email TEXT NOT NULL,
-                password TEXT NOT NULL
+                password TEXT NOT NULL,
                 role TEXT NOT NULL DEFAULT 'user'
             )
         ''')
@@ -119,14 +119,14 @@ def admin_required(f):
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
-    db = get_db()
+    db = get_db_connection()
     users = db.execute("SELECT id, username, email, role FROM users").fetchall()
     db.close()
     return render_template('admin/dashboard.html', users=users)
 @app.route('/admin/users/promote/<int:user_id>')
 @admin_required
 def promote_user(user_id):
-    db = get_db()
+    db = get_db_connection()
     db.execute("UPDATE users SET role = 'admin' WHERE id = ?", (user_id,))
     db.commit()
     db.close()
