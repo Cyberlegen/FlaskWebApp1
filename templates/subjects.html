@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subjects</title>
+    <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='subjects-style.css') }}" rel="stylesheet">
+    </head>
+  <body>
+    <div class="container mt-5">
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-body">
+              <h3 class="card-title text-center">Subjects</h3>
+              <div class="table-responsive">
+                <dl class="row">
+                  {% for subject in subjects %}
+                    <dt class="col-sm-3">{{ subject.name }}</dt>
+                    <dd class="col-sm-9">{{ subject.description }}</dd>
+                  {% endfor %}
+                </dl>
+              </div>
+              <div class="text-center mt-3">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
+                {% if session.logged_in %}
+                    <p>Welcome, {{ session.username }}!</p>
+                    {% if session.username == 'admin' %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-warning">Admin Dashboard</a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
+                    <a href="{{ url_for('signup') }}" class="btn btn-success">Sign Up</a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="{{ url_for('static', filename='bootstrap.min.js') }}"></script>
+    </body>
+</html>

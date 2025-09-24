@@ -7,20 +7,24 @@
     <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet">
 </head>
 <body>
-    <div class="container mt-5">
+    <div id="divs1" class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-body text-center">
-                        <h1 class="card-title">Welcome to Flask Web App</h1>
+                        <h1 class="card-title">Welcome to MY Flask Web App</h1>
                         <p class="card-text">Please choose an option below:</p>
                         <a href="{{ url_for('login') }}" class="btn btn-primary me-2">Login</a>
                         <a href="{{ url_for('signup') }}" class="btn btn-success">Sign Up</a>
+                    </div>
+                    <div class="card-footer text-center"
+                    <h3 class="card-text">This is a very fun website for all....</h3>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
     <script src="{{ url_for('static', filename='bootstrap.min.js') }}"></script>
 </body>
 </html>
