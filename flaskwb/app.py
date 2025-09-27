@@ -1,8 +1,6 @@
 from functools import wraps
 from flask_caching import Cache
-
 from flask import Flask, flash, redirect, render_template, request, session, url_for
-
 from database import (
     create_user,
     delete_user,
@@ -14,38 +12,35 @@ from database import (
     user_exists,
     validate_user,
 )
-
+config = {
+    "DEBUG": True,          # some Flask specific configs
+    "CACHE_TYPE": "SimpleCache",  # Flaelated configs
+    "CACHE_DEFAULT_TIMEOUT": 300
+}
 app = Flask(__name__)
 app.secret_key = 'paranoid'  # Change this in production
-"""app.config['CACHE_TYPE'] = 'redis'
-app.config['CACHE_REDIS_HOST'] = '0.0.0.0'
-app.config['CACHE_REDIS_PORT'] = 34313
+#app.config['CACHE_TYPE'] = 'redis'
+#app.config['CACHE_REDIS_HOST'] = '0.0.0.0'
+#app.config['CACHE_REDIS_PORT'] = 34313
 #app.config['CACHE_REDIS_DB'] = 0
-cache = Cache(app)"""
-
-
-
+#cache = Cache(app)
+app.config.from_mapping(config)
+cache = Cache(app)
 """""""""""""INDEX AND CONDITIONS"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
 @app.route('/')
-@cache.cached(timeout=50)
 def index():
     return render_template('index.html')
-
 def admin_required(f):      #CONDITION FOR ADMIN REQUIRED
     @wraps(f)
     def wrapper(*args, **kwargs):
         if not session.get('logged_in'):
             flash('Please log in first', 'error')
             return redirect(url_for('login'))
-
-        if session.get('role') != 'admin':
+        if (session.get('username') != 'admin') :
             flash('Admin access required', 'error')
             return redirect(url_for('index'))
-
         return f(*args, **kwargs)
     return wrapper
-
 def login_required(f):     #CONDITION FOR LOGIN REQUIRED
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -54,7 +49,7 @@ def login_required(f):     #CONDITION FOR LOGIN REQUIRED
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return wrapper
-"""""""""ADMIN: DASHBOARD, PROMOTE, DEMOTE, DELETE"""""""""""""""""""""""""""""""""""""""""""""""""""
+"""""""""ADMIN: DASHBOARD, PROMOTE, DEMOTE, DELETE"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
@@ -77,37 +72,30 @@ def demote_user(user_id):
 def delete_user_route(user_id):
     delete_user(user_id)
     flash('User deleted successfully', 'success')
-    return redirect(url_for('admin_dashboard'))
-    
+    return redirect(url_for('admin_dashboard'))   
 """""""""""""AUTHENTICATION: LOGIN, SIGNUP, LOGOUT"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 promote_user_to_admin('admin')
 @app.route('/login', methods=['GET', 'POST'])
-#@cache.cached(timeout=50)
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-
         # Basic validation
         if not username or not password:
             flash('Please fill in all fields', 'error')
         else:
             # Validate credentials and get user data
             user = validate_user(username, password)
-
             if user:
                 # Store user data in session
                 session['username'] = user['username']
                 session['role'] = user['role']
                 session['logged_in'] = True
-
                 flash(f'Login successful! Welcome back, {username}', 'success')
                 return redirect(url_for('subjects'))
             else:
                 flash('Invalid username or password', 'error')
-
     return render_template('login.html')
-
 @app.route('/signup', methods=['GET', 'POST'])
 #@cache.cached(timeout=50)
 def signup():
@@ -119,16 +107,12 @@ def signup():
         # Basic validation 
         if not username or not email or not password or not confirm_password:
             flash('Please fill in all fields', 'error')
-            return redirect(url_for('signup'))
         elif '@' not in email:
             flash('Invalid email address', 'error')
-            return redirect(url_for('signup'))
         elif password != confirm_password:
             flash('Passwords do not match', 'error')
-            return redirect(url_for('signup'))
         elif user_exists(username):
             flash('Username already exists. Please choose a different username.', 'error')
-            return redirect(url_for('signup'))
         else:
             # Save user to database
             if create_user(username, email, password):
@@ -136,18 +120,16 @@ def signup():
                 return redirect(url_for('login'))
             else:
                 flash('Failed to create user due to a server error.', 'error')
-    return render_template('signup.html')
-                
+    return render_template('signup.html')                
 @app.route('/logout')
 def logout():
     session.clear()
     flash('You have been logged out', 'success')
     return redirect(url_for('index'))
-
 """""""""""""SUBJECTS"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 @app.route('/subjects')
 @login_required
-#@cache.cached(timeout=20)
+@cache.cached(timeout=20)
 def subjects():
     # Add your logic to fetch and display subjects here
     # For now, we'll just render the subjects template
@@ -160,11 +142,9 @@ def subjects():
         {"name": "Biology", "description": "BIO101 - Cell biology and genetics"},
         {"name": "Geography", "description": "GEO101 - Physical and human geography"},
         {"name": "English", "description": "ENG101 - Literature and composition"},
-        {"name": "Spanish", "description": "SPA101 - Basic Spanish language and culture"}
-    ]
+        {"name": "Spanish", "description": "SPA101 - Basic Spanish language and culture"}]
     return render_template('subjects.html', subjects=subjects)
     return render_template('subjects.html', subjects=subjects)
-
 if __name__ == '__main__':
        # Initialize database first
        init_db()

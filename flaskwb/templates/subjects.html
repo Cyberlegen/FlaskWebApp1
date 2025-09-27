@@ -26,7 +26,7 @@
                 <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
                 {% if session.logged_in %}
                     <p>Welcome, {{ session.username }}!</p>
-                    {% if session.username == 'admin' %}
+                    {% if (session.username == 'admin') or (session.role=='admin') %}
                         <a href="{{ url_for('admin_dashboard') }}" class="btn btn-warning">Admin Dashboard</a>
                     {% endif %}
                     <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
